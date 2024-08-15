@@ -1,18 +1,21 @@
 import { Injectable } from "@nestjs/common";
 import { EnvironmentService } from "environment/environment.service";
 import * as path from 'path';
-import * as fsp from 'fs/promises';
 import { parse } from 'yaml';
 import * as cproc from 'child_process';
-import { Plugin, PluginFunction, PluginFunctionsWithHandlers, PluginHandler } from "@bitmetro/callisto";
+import { Plugin, PluginFunctionsWithHandlers, PluginHandler } from "@bitmetro/callisto";
 import { ChatService } from "features/chat/chat.service";
 import { Manifest } from "types/manifest";
+import { PluginConfigsService } from "features/plugin-configs/plugin-configs.service";
+import { FileSystemService } from "features/file-system/file-system.service";
 
 @Injectable()
 export class PluginService {
   constructor(
     private readonly envService: EnvironmentService,
     private readonly chatService: ChatService,
+    private readonly fsService: FileSystemService,
+    private readonly pluginConfigsService: PluginConfigsService,
   ) {}
 
   async installPlugin(name: string) {
@@ -44,7 +47,7 @@ export class PluginService {
 
     const yamlPath = path.resolve(pluginPath, 'plugin.yaml');
 
-    const yamlContent = await fsp.readFile(yamlPath, 'utf-8');
+    const yamlContent = await this.fsService.readFile(yamlPath);
     const pluginData = parse(yamlContent).plugin as Plugin;
 
     const functions = Object.entries(pluginData.functions);
@@ -54,7 +57,7 @@ export class PluginService {
     for (const [funcName, func] of functions) {
       functionsWithHandlers[funcName] = {
         ...func,
-        handler: await this.buildHandler(pluginPath, funcName),
+        handler: await this.buildHandler(name, pluginPath, funcName),
       };
     }
 
@@ -63,17 +66,10 @@ export class PluginService {
     console.log(`Applied plugin ${name}`);
   }
 
-  private async buildHandler(pluginPath: string, funcName: string, ): Promise<PluginHandler> {
-    const worker = cproc.fork(
-      path.resolve(pluginPath, 'shim.js'),
-      [],
-      {
-        silent: true,
-        env: {
-          WEATHER_API_KEY: ''
-        }
-      }
-    );
+  private async buildHandler(pluginName: string, pluginPath: string, funcName: string, ): Promise<PluginHandler> {
+    const config = await this.pluginConfigsService.loadPluginConfig(pluginName);
+
+    const worker = cproc.fork(path.resolve(pluginPath, 'shim.js'), [], { silent: true, env: config });
 
     worker.stdout.pipe(process.stdout);
     worker.stderr.pipe(process.stderr);
@@ -94,7 +90,7 @@ export class PluginService {
       
       const downloadedPluginPath = await this.getPluginPath(name);
 
-      await fsp.cp(distPath, downloadedPluginPath, { recursive: true });
+      await this.fsService.copyDir(distPath, downloadedPluginPath);
 
       console.log(`Downloaded plugin ${name}`);
       resolve(downloadedPluginPath);
@@ -102,49 +98,29 @@ export class PluginService {
   }
 
   private async addShim(pluginPath: string) {
-    await fsp.copyFile(path.resolve(process.cwd(), 'templates', 'shim.js'), path.resolve(pluginPath, 'shim.js'));
+    await this.fsService.copyFile(path.resolve(process.cwd(), 'templates', 'shim.js'), path.resolve(pluginPath, 'shim.js'));
   }
 
   private async getPluginsPath() {
-    return await this.getOrCreateDir(path.resolve(process.cwd(), 'plugins'));
+    return await this.fsService.getOrCreateDir(path.resolve(process.cwd(), 'plugins'));
   }
 
   private async getPluginPath(name: string) {
-    return await this.getOrCreateDir(path.resolve(await this.getPluginsPath(), name));
+    return await this.fsService.getOrCreateDir(path.resolve(await this.getPluginsPath(), name));
   }
 
   private async getManifestPath() {
     const pluginsPath = await this.getPluginsPath();
-    return await this.getOrCreateFile(path.resolve(pluginsPath, 'manifest.json'), '{}');
+    return await this.fsService.getOrCreateFile(path.resolve(pluginsPath, 'manifest.json'), '{}');
   }
 
   private async getManifest() {
     const manifestPath = await this.getManifestPath();
-    return JSON.parse((await fsp.readFile(manifestPath)).toString()) as Manifest;
+    return JSON.parse((await this.fsService.readFile(manifestPath))) as Manifest;
   }
 
   private async updateManifest(manifest: Manifest) {
     const manifestPath = await this.getManifestPath();
-    await fsp.writeFile(manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
-  }
-
-  private async getOrCreateFile(pathname: string, content = '') {
-    try {
-      await fsp.access(pathname);
-    } catch {
-      await fsp.writeFile(pathname, content);
-    }
-
-    return pathname;
-  }
-
-  private async getOrCreateDir(dirname: string) {
-    try {
-      await fsp.access(dirname);
-    } catch {
-      await fsp.mkdir(dirname);
-    }
-
-    return dirname;
+    await this.fsService.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
   }
 }
