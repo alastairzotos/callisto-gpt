@@ -9,7 +9,11 @@
   },
   "dependencies": {
     "@bitmetro/callisto": "*",
-    "eventsource": "^2.0.2"
+    "chalk": "4",
+    "cli-spinners": "^3.1.0",
+    "eventsource": "^2.0.2",
+    "fix-esm": "^1.0.1",
+    "ora": "^8.0.1"
   },
   "devDependencies": {
     "@types/eventsource": "^1.1.15",
