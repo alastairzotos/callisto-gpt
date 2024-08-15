@@ -1,0 +1,14 @@
+plugin:
+  name: Weather
+  description: Gets the weather
+  functions:
+    getWeather:
+      description: Retrieves the weather at a location
+      instructions: Call this when the user asks what the weather is like
+      parameters:
+        location:
+          description: The location where the user wants to get the weather
+          instructions: Pass a specific name for the location. If the user doesn't say their location then ask them for it before calling the function
+        date:
+          description: The date the user is enquiring about
+          instructions: Pass the date the user is asking about, and default to today

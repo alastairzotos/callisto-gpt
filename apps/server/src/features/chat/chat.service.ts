@@ -1,4 +1,4 @@
-import { Plugins } from "@bitmetro/callisto";
+import { PluginFunctions, PluginFunctionsWithHandlers, Plugins } from "@bitmetro/callisto";
 import { Injectable } from "@nestjs/common";
 import { OpenAIService } from "integrations/openai/openai.service";
 import OpenAI from "openai";
@@ -7,18 +7,17 @@ import { ChatResponder } from "utils/responder";
 
 @Injectable()
 export class ChatService {
-  private plugins: Plugins = {};
+  private functions: PluginFunctionsWithHandlers = {};
 
   constructor(
     private readonly openAi: OpenAIService,
   ) {}
 
-  async applyPlugins(plugins: Plugins) {
-    this.plugins = plugins;
+  async applyFunctions(functions: PluginFunctionsWithHandlers) {
+    this.functions = functions;
 
-    const tools = Object.entries(plugins).map(([name, plugin]) => mapPluginFunctionToOpenAIFunction(name, plugin));
-    const instructions = `You are a useful assistant. Help the user with their queries.\n\n${mapPluginFunctionsToPrompts(plugins)}\n`;
-
+    const tools = Object.entries(functions).map(([name, func]) => mapPluginFunctionToOpenAIFunction(name, func));
+    const instructions = `You are a useful assistant. Help the user with their queries.\n\n${mapPluginFunctionsToPrompts(functions)}\n`;
 
     await this.openAi.updateAssistant(instructions, tools);
   }
@@ -97,7 +96,7 @@ export class ChatService {
   ): Promise<OpenAI.Beta.Threads.Runs.RunSubmitToolOutputsParams.ToolOutput> {
     const args = JSON.parse(toolCall.function.arguments);
 
-    const output = await this.plugins[toolCall.function.name].handler(args);
+    const output = await this.functions[toolCall.function.name].handler(args);
 
     return { tool_call_id: toolCall.id, output }
   }

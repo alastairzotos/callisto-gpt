@@ -1,7 +1,7 @@
-import { PluginFunction, PluginFunctionParameter, Plugins } from "@bitmetro/callisto"
+import { PluginFunction, PluginFunctionParameter, PluginFunctions } from "@bitmetro/callisto"
 import OpenAI from "openai";
 
-export const mapPluginFunctionsToPrompts = (plugins: Plugins): string =>
+export const mapPluginFunctionsToPrompts = (plugins: PluginFunctions): string =>
   `You are provided with the following functions:\n${Object.entries(plugins).map(([name, plugin]) => mapPluginFunctionToPrompt(name, plugin)).join('\n')
   }`;
 
