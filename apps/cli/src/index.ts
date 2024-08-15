@@ -12,7 +12,7 @@ let threadId: string;
 
 const prompt = () => {
   rl.question('> ', async query => {
-    const url = `http://localhost:5000/chat?q=${query}${threadId ? `&tid=${threadId}` : ''}`;
+    const url = `http://localhost:6000/chat?q=${query}${threadId ? `&tid=${threadId}` : ''}`;
     const ev = new EventSource(url);
 
     ev.onmessage = (evt) => {
