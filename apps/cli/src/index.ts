@@ -2,16 +2,26 @@ import { createInterface } from 'readline';
 import EventSource from 'eventsource';
 import { Response } from '@bitmetro/callisto';
 
-const rl = createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: false,
-})
+async function* questions(query: string) {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false,
+  });
 
-let threadId: string;
+  try {
+    for (; ;) {
+      yield new Promise<string>((resolve) => rl.question(query, resolve));
+    }
+  } finally {
+    rl.close();
+  }
+}
 
-const prompt = () => {
-  rl.question('> ', async query => {
+async function run() {
+  let threadId: string | undefined;
+
+  const handleQuery = (query: string) => new Promise<void>(resolve => {
     const url = `http://localhost:6000/api/v1/chat?q=${encodeURIComponent(query)}${threadId ? `&tid=${threadId}` : ''}`;
     const ev = new EventSource(url);
 
@@ -33,11 +43,15 @@ const prompt = () => {
 
         case 'stop':
           process.stdout.write('\n');
-          prompt();
+          resolve();
           break;
       }
     };
   })
+
+  for await (const query of questions("> ")) {
+    await handleQuery(query);
+  }
 }
 
-prompt();
+run();
