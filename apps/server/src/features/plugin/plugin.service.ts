@@ -1,14 +1,14 @@
 import { forwardRef, Inject, Injectable } from "@nestjs/common";
-import { EnvironmentService } from "environment/environment.service";
-import * as path from 'path';
 import { parse } from 'yaml';
-import * as cproc from 'child_process';
+import { EnvironmentService } from "environment/environment.service";
 import { Plugin, PluginFunctionsWithHandlers, PluginHandler } from "@bitmetro/callisto";
 import { ChatService } from "features/chat/chat.service";
 import { Manifest } from "types/manifest";
 import { PluginConfigsService } from "features/plugin-configs/plugin-configs.service";
 import { FileSystemService } from "features/file-system/file-system.service";
 import { RegistryService } from "integrations/registry/registry.service";
+import * as path from 'path';
+import * as cproc from 'child_process';
 
 @Injectable()
 export class PluginService {

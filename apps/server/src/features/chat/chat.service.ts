@@ -1,4 +1,4 @@
-import { PluginFunctions, PluginFunctionsWithHandlers, Plugins } from "@bitmetro/callisto";
+import { PluginFunctionsWithHandlers } from "@bitmetro/callisto";
 import { Injectable } from "@nestjs/common";
 import { OpenAIService } from "integrations/openai/openai.service";
 import OpenAI from "openai";

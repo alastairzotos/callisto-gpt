@@ -2,8 +2,8 @@ import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { CryptoService } from "features/crypto/crypto.service";
 import { FileSystemService } from "features/file-system/file-system.service";
 import { PluginService } from "features/plugin/plugin.service";
-import * as path from 'path';
 import { PluginConfig } from "types/plugin-configs";
+import * as path from 'path';
 
 @Injectable()
 export class PluginConfigsService {
