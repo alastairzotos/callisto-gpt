@@ -11,8 +11,10 @@ export interface PluginFunction {
   parameters: PluginFunctionParameters;
 }
 
+export type PluginHandler = (...args: string[]) => Promise<string>;
+
 export type PluginFunctionWithHandler = PluginFunction & {
-  handler: (...args: string[]) => Promise<string>;
+  handler: PluginHandler;
 }
 
 export type PluginFunctions = Record<string, PluginFunction>;

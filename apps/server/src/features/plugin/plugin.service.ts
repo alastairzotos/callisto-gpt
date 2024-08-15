@@ -3,7 +3,8 @@ import { EnvironmentService } from "environment/environment.service";
 import * as path from 'path';
 import * as fsp from 'fs/promises';
 import { parse } from 'yaml';
-import { Plugin, PluginFunctionsWithHandlers } from "@bitmetro/callisto";
+import * as cproc from 'child_process';
+import { Plugin, PluginFunction, PluginFunctionsWithHandlers, PluginHandler } from "@bitmetro/callisto";
 import { ChatService } from "features/chat/chat.service";
 import { Manifest } from "types/manifest";
 
@@ -16,6 +17,7 @@ export class PluginService {
 
   async installPlugin(name: string) {
     const pluginPath = await this.fetchPlugin(name);
+    await this.addShim(pluginPath);
     await this.registerPlugin(name, pluginPath);
     await this.applyPlugin(name, pluginPath);
   }
@@ -46,23 +48,42 @@ export class PluginService {
     const pluginData = parse(yamlContent).plugin as Plugin;
 
     const functions = Object.entries(pluginData.functions);
-    const functionsWithHandlers = functions.reduce(
-      (acc, [name, func]) => ({
-        ...acc,
-        [name]: {
-          ...func,
-          handler: async (args) => {
-            console.log(`Called '${name}'`, args);
-            return "Sunny, 34 degrees";
-          }
-        }
-      }),
-      {} as PluginFunctionsWithHandlers
-    );
+
+    const functionsWithHandlers: PluginFunctionsWithHandlers = {};
+
+    for (const [funcName, func] of functions) {
+      functionsWithHandlers[funcName] = {
+        ...func,
+        handler: await this.buildHandler(pluginPath, funcName),
+      };
+    }
 
     await this.chatService.applyFunctions(functionsWithHandlers);
 
     console.log(`Applied plugin ${name}`);
+  }
+
+  private async buildHandler(pluginPath: string, funcName: string, ): Promise<PluginHandler> {
+    const worker = cproc.fork(
+      path.resolve(pluginPath, 'shim.js'),
+      [],
+      {
+        silent: true,
+        env: {
+          WEATHER_API_KEY: ''
+        }
+      }
+    );
+
+    worker.stdout.pipe(process.stdout);
+    worker.stderr.pipe(process.stderr);
+
+    return async (args) => {
+      return new Promise<string>((resolve) => {
+        worker.on('message', resolve);
+        worker.send({ funcName, args });
+      })
+    }
   }
 
   private async fetchPlugin(name: string) {
@@ -78,6 +99,10 @@ export class PluginService {
       console.log(`Downloaded plugin ${name}`);
       resolve(downloadedPluginPath);
     })
+  }
+
+  private async addShim(pluginPath: string) {
+    await fsp.copyFile(path.resolve(process.cwd(), 'templates', 'shim.js'), path.resolve(pluginPath, 'shim.js'));
   }
 
   private async getPluginsPath() {
