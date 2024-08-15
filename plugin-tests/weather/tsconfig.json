@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2017",  
     "module": "commonjs",  
-    "declaration": true,  
+    "declaration": false,  
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,  
