@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { EnvironmentService } from "environment/environment.service";
 import * as path from 'path';
 import { parse } from 'yaml';
@@ -11,39 +11,53 @@ import { FileSystemService } from "features/file-system/file-system.service";
 
 @Injectable()
 export class PluginService {
+  private workers: Record<string, cproc.ChildProcess> = {};
+
   constructor(
     private readonly envService: EnvironmentService,
     private readonly chatService: ChatService,
     private readonly fsService: FileSystemService,
+
+    @Inject(forwardRef(() => PluginConfigsService))
     private readonly pluginConfigsService: PluginConfigsService,
   ) {}
 
   async installPlugin(name: string) {
-    const pluginPath = await this.fetchPlugin(name);
-    await this.addShim(pluginPath);
-    await this.registerPlugin(name, pluginPath);
-    await this.applyPlugin(name, pluginPath);
+    await this.fetchPlugin(name);
+    await this.addShim(name);
+    await this.registerPlugin(name);
+    await this.applyPlugin(name);
   }
 
   async startPlugins() {
     const manifest = await this.getManifest();
 
-    for (const [name, pluginPath] of Object.entries(manifest)) {
-      await this.applyPlugin(name, pluginPath);
+    for (const [name] of Object.entries(manifest)) {
+      await this.applyPlugin(name);
     }
   }
 
-  private async registerPlugin(name: string, pluginPath: string) {
+  async restartPlugin(pluginName: string) {
+    if (this.workers[pluginName]) {
+      this.workers[pluginName].kill();
+
+      await this.applyPlugin(pluginName);
+    }
+  }
+
+  private async registerPlugin(name: string) {
     const manifest = await this.getManifest();
 
     await this.updateManifest({
       ...manifest,
-      [name]: pluginPath,
+      [name]: '1.0.0',
     });
   }
 
-  private async applyPlugin(name: string, pluginPath: string) {
+  private async applyPlugin(name: string) {
     console.log(`Applying plugin ${name}...`);
+
+    const pluginPath = await this.getPluginPath(name);
 
     const yamlPath = path.resolve(pluginPath, 'plugin.yaml');
 
@@ -70,6 +84,7 @@ export class PluginService {
     const config = await this.pluginConfigsService.loadPluginConfig(pluginName);
 
     const worker = cproc.fork(path.resolve(pluginPath, 'shim.js'), [], { silent: true, env: config });
+    this.workers[pluginName] = worker;
 
     worker.stdout.pipe(process.stdout);
     worker.stderr.pipe(process.stderr);
@@ -83,7 +98,7 @@ export class PluginService {
   }
 
   private async fetchPlugin(name: string) {
-    return new Promise<string>(async (resolve) => {
+    return new Promise<void>(async (resolve) => {
       console.log(`Downloading plugin ${name}...`);
       const pluginPath = path.resolve(this.envService.get().pluginsUrl, name);
       const distPath = path.resolve(pluginPath, 'dist');
@@ -93,12 +108,15 @@ export class PluginService {
       await this.fsService.copyDir(distPath, downloadedPluginPath);
 
       console.log(`Downloaded plugin ${name}`);
-      resolve(downloadedPluginPath);
+      resolve();
     })
   }
 
-  private async addShim(pluginPath: string) {
-    await this.fsService.copyFile(path.resolve(process.cwd(), 'templates', 'shim.js'), path.resolve(pluginPath, 'shim.js'));
+  private async addShim(pluginName: string) {
+    await this.fsService.copyFile(
+      path.resolve(process.cwd(), 'templates', 'shim.js'),
+      path.resolve(await this.getPluginPath(pluginName), 'shim.js')
+    );
   }
 
   private async getPluginsPath() {

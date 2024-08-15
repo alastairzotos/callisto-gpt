@@ -19,10 +19,17 @@ export class FileSystemService {
     await fsp.cp(src, dest, { recursive: true });
   }
 
-  async getOrCreateFile(pathname: string, content = '') {
+  async exists(pathname: string) {
     try {
       await fsp.access(pathname);
+      return true;
     } catch {
+      return false;
+    }
+  }
+
+  async getOrCreateFile(pathname: string, content = '') {
+    if (!await this.exists(pathname)) {
       await fsp.writeFile(pathname, content);
     }
 
@@ -30,9 +37,7 @@ export class FileSystemService {
   }
 
   async getOrCreateDir(dirname: string) {
-    try {
-      await fsp.access(dirname);
-    } catch {
+    if (!await this.exists(dirname)) {
       await fsp.mkdir(dirname);
     }
 
