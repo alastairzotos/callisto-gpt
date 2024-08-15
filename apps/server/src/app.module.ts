@@ -5,9 +5,11 @@ import { PluginConfigsModule } from 'features/plugin-configs/plugin-configs.modu
 import { FileSystemModule } from 'features/file-system/file-system.module';
 import { RegistryModule } from 'integrations/registry/registry.module';
 import { CryptoModule } from 'features/crypto/crypto.module';
+import { HealthModule } from 'features/health/health.module';
 
 @Module({
   imports: [
+    HealthModule,
     ChatModule,
     PluginModule,
     FileSystemModule,
