@@ -8,6 +8,7 @@ import { ChatService } from "features/chat/chat.service";
 import { Manifest } from "types/manifest";
 import { PluginConfigsService } from "features/plugin-configs/plugin-configs.service";
 import { FileSystemService } from "features/file-system/file-system.service";
+import { RegistryService } from "integrations/registry/registry.service";
 
 @Injectable()
 export class PluginService {
@@ -17,13 +18,14 @@ export class PluginService {
     private readonly envService: EnvironmentService,
     private readonly chatService: ChatService,
     private readonly fsService: FileSystemService,
+    private readonly registryService: RegistryService,
 
     @Inject(forwardRef(() => PluginConfigsService))
     private readonly pluginConfigsService: PluginConfigsService,
   ) {}
 
   async installPlugin(name: string) {
-    await this.fetchPlugin(name);
+    await this.registryService.fetchPlugin(name, await this.getPluginPath(name));
     await this.addShim(name);
     await this.registerPlugin(name);
     await this.applyPlugin(name);
@@ -95,21 +97,6 @@ export class PluginService {
         worker.send({ funcName, args });
       })
     }
-  }
-
-  private async fetchPlugin(name: string) {
-    return new Promise<void>(async (resolve) => {
-      console.log(`Downloading plugin ${name}...`);
-      const pluginPath = path.resolve(this.envService.get().pluginsUrl, name);
-      const distPath = path.resolve(pluginPath, 'dist');
-      
-      const downloadedPluginPath = await this.getPluginPath(name);
-
-      await this.fsService.copyDir(distPath, downloadedPluginPath);
-
-      console.log(`Downloaded plugin ${name}`);
-      resolve();
-    })
   }
 
   private async addShim(pluginName: string) {

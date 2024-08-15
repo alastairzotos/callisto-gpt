@@ -5,12 +5,14 @@ import { FileSystemModule } from "features/file-system/file-system.module";
 import { PluginConfigsModule } from "features/plugin-configs/plugin-configs.module";
 import { PluginController } from "features/plugin/plugin.controller";
 import { PluginService } from "features/plugin/plugin.service";
+import { RegistryModule } from "integrations/registry/registry.module";
 
 @Module({
   imports: [
     EnvironmentModule,
     ChatModule,
     FileSystemModule,
+    RegistryModule,
     forwardRef(() => PluginConfigsModule),
   ],
   controllers: [PluginController],
