@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from "@nestjs/common";
-import { EnvironmentService } from "environment/environment.service";
 import { CryptoService } from "features/crypto/crypto.service";
 import { FileSystemService } from "features/file-system/file-system.service";
 import { PluginService } from "features/plugin/plugin.service";
