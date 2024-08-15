@@ -85,6 +85,8 @@ export class PluginService {
   private async buildHandler(pluginName: string, pluginPath: string, funcName: string, ): Promise<PluginHandler> {
     const config = await this.pluginConfigsService.loadPluginConfig(pluginName);
 
+    console.log(config);
+
     const worker = cproc.fork(path.resolve(pluginPath, 'shim.js'), [], { silent: true, env: config });
     this.workers[pluginName] = worker;
 
