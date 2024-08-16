@@ -11,7 +11,9 @@ export class ChatService {
 
   constructor(
     private readonly openAi: OpenAIService,
-  ) {}
+  ) {
+    this.openAi.updateAssistant('You are a helpful assistant.', []);
+  }
 
   async applyFunctions(functions: PluginFunctionsWithHandlers) {
     this.functions = functions;
