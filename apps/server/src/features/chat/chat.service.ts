@@ -19,7 +19,7 @@ export class ChatService {
     this.functions = functions;
 
     const tools = Object.entries(functions).map(([name, func]) => mapPluginFunctionToOpenAIFunction(name, func));
-    const instructions = `You are a useful assistant. Help the user with their queries.\n\n${mapPluginFunctionsToPrompts(functions)}\n`;
+    const instructions = `You are a helpful assistant. Help the user with their queries.\n\n${mapPluginFunctionsToPrompts(functions)}\n`;
 
     await this.openAi.updateAssistant(instructions, tools);
   }
