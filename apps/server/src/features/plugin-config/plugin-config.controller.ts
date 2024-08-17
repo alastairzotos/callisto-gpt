@@ -1,11 +1,11 @@
 import { Body, Controller, Param, Post } from "@nestjs/common";
-import { PluginConfigsService } from "features/plugin-configs/plugin-configs.service";
+import { PluginConfigService } from "features/plugin-config/plugin-config.service";
 import { PluginConfig } from "types/plugin-configs";
 
-@Controller('plugin-configs')
-export class PluginConfigsController {
+@Controller('plugin-config')
+export class PluginConfigController {
   constructor(
-    private readonly pluginConfigsService: PluginConfigsService,
+    private readonly pluginConfigsService: PluginConfigService,
   ) {}
 
   @Post('config/:pluginName')

@@ -58,7 +58,7 @@ export class ChatService {
     try {
       switch (event.event) {
         case 'thread.message.delta':
-          if (event.data.delta.content[0].type === 'text') {
+          if (event.data.delta.content?.[0].type === 'text') {
             const text = event.data.delta.content[0].text?.value as string;
             responder.sendText(text);
           }
@@ -78,9 +78,9 @@ export class ChatService {
 
     try {
       const toolOutputs = await Promise.all(
-        data.required_action.submit_tool_outputs.tool_calls.map(
+        data.required_action?.submit_tool_outputs.tool_calls.map(
           (toolCall) => this.handleFunctionCall(toolCall),
-        ).filter(i => !!i)
+        ).filter(i => !!i) || []
       );
 
       const stream = this.openAi.submitToolOutputsStream(thread_id, id, toolOutputs);

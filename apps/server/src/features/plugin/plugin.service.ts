@@ -1,12 +1,11 @@
 import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { parse } from 'yaml';
-import { EnvironmentService } from "environment/environment.service";
 import { Plugin, PluginFunctionsWithHandlers, PluginHandler } from "@bitmetro/callisto";
 import { ChatService } from "features/chat/chat.service";
-import { Manifest } from "types/manifest";
-import { PluginConfigsService } from "features/plugin-configs/plugin-configs.service";
 import { FileSystemService } from "features/file-system/file-system.service";
 import { RegistryService } from "integrations/registry/registry.service";
+import { PluginRepository } from "features/plugin/plugin.repository";
+import { PluginConfigService } from "features/plugin-config/plugin-config.service";
 import * as path from 'path';
 import * as cproc from 'child_process';
 
@@ -15,14 +14,18 @@ export class PluginService {
   private workers: Record<string, cproc.ChildProcess> = {};
 
   constructor(
-    private readonly envService: EnvironmentService,
     private readonly chatService: ChatService,
     private readonly fsService: FileSystemService,
     private readonly registryService: RegistryService,
+    private readonly pluginRepo: PluginRepository,
 
-    @Inject(forwardRef(() => PluginConfigsService))
-    private readonly pluginConfigsService: PluginConfigsService,
+    @Inject(forwardRef(() => PluginConfigService))
+    private readonly pluginConfigService: PluginConfigService,
   ) {}
+
+  async getPluginByName(name: string) {
+    return await this.pluginRepo.getPluginByName(name);
+  }
 
   async installPlugin(name: string) {
     await this.registryService.fetchPlugin(name, await this.getPluginPath(name));
@@ -32,9 +35,9 @@ export class PluginService {
   }
 
   async startPlugins() {
-    const manifest = await this.getManifest();
+    const plugins = await this.pluginRepo.getPlugins();
 
-    for (const [name] of Object.entries(manifest)) {
+    for (const { name } of plugins) {
       await this.applyPlugin(name);
     }
   }
@@ -48,12 +51,7 @@ export class PluginService {
   }
 
   private async registerPlugin(name: string) {
-    const manifest = await this.getManifest();
-
-    await this.updateManifest({
-      ...manifest,
-      [name]: '1.0.0',
-    });
+    await this.pluginRepo.addPlugin(name);
   }
 
   private async applyPlugin(name: string) {
@@ -83,13 +81,13 @@ export class PluginService {
   }
 
   private async buildHandler(pluginName: string, pluginPath: string, funcName: string, ): Promise<PluginHandler> {
-    const config = await this.pluginConfigsService.loadPluginConfig(pluginName);
+    const config = await this.pluginConfigService.loadPluginConfig(pluginName);
 
     const worker = cproc.fork(path.resolve(pluginPath, 'shim.js'), [], { silent: true, env: config });
     this.workers[pluginName] = worker;
 
-    worker.stdout.pipe(process.stdout);
-    worker.stderr.pipe(process.stderr);
+    worker.stdout?.pipe(process.stdout);
+    worker.stderr?.pipe(process.stderr);
 
     return async (args) => {
       return new Promise<string>((resolve) => {
@@ -114,18 +112,4 @@ export class PluginService {
     return await this.fsService.getOrCreateDir(path.resolve(await this.getPluginsPath(), name));
   }
 
-  private async getManifestPath() {
-    const pluginsPath = await this.getPluginsPath();
-    return await this.fsService.getOrCreateFile(path.resolve(pluginsPath, 'manifest.json'), '{}');
-  }
-
-  private async getManifest() {
-    const manifestPath = await this.getManifestPath();
-    return JSON.parse((await this.fsService.readFile(manifestPath))) as Manifest;
-  }
-
-  private async updateManifest(manifest: Manifest) {
-    const manifestPath = await this.getManifestPath();
-    await this.fsService.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
-  }
 }
