@@ -5,6 +5,8 @@ import OpenAI from "openai";
 import { mapPluginFunctionToOpenAIFunction, mapPluginFunctionsToPrompts } from "utils/plugin";
 import { ChatResponder } from "utils/responder";
 
+const DEFAULT_PROMPT = "You are a helpful assistant. Help the user with their queries.";
+
 @Injectable()
 export class ChatService {
   private functions: PluginFunctionsWithHandlers = {};
@@ -12,14 +14,14 @@ export class ChatService {
   constructor(
     private readonly openAi: OpenAIService,
   ) {
-    this.openAi.updateAssistant('You are a helpful assistant.', []);
+    this.openAi.updateAssistant(DEFAULT_PROMPT, []);
   }
 
   async applyFunctions(functions: PluginFunctionsWithHandlers) {
     this.functions = functions;
 
     const tools = Object.entries(functions).map(([name, func]) => mapPluginFunctionToOpenAIFunction(name, func));
-    const instructions = `You are a helpful assistant. Help the user with their queries.\n\n${mapPluginFunctionsToPrompts(functions)}\n`;
+    const instructions = `${DEFAULT_PROMPT}\n\n${mapPluginFunctionsToPrompts(functions)}\n`;
 
     await this.openAi.updateAssistant(instructions, tools);
   }
