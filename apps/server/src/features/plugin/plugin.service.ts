@@ -28,8 +28,7 @@ export class PluginService {
   }
 
   async installPlugin(name: string) {
-    await this.registryService.fetchPlugin(name, await this.getPluginPath(name));
-    await this.addShim(name);
+    await this.downloadPlugin(name);
     await this.registerPlugin(name);
     await this.applyPlugin(name);
   }
@@ -38,6 +37,10 @@ export class PluginService {
     const plugins = await this.pluginRepo.getPlugins();
 
     for (const { name } of plugins) {
+      if (!await this.hasPlugin(name)) {
+        await this.downloadPlugin(name);
+      }
+
       await this.applyPlugin(name);
     }
   }
@@ -50,8 +53,19 @@ export class PluginService {
     }
   }
 
+  private async hasPlugin(pluginName: string) {
+    return await this.fsService.exists(await this.resolvePluginPath(pluginName));
+  }
+
   private async registerPlugin(name: string) {
     await this.pluginRepo.addPlugin(name);
+  }
+
+  private async downloadPlugin(name: string) {
+    console.log(`Downloading plugin ${name}...`);
+    await this.registryService.fetchPlugin(name, await this.getPluginPath(name));
+    await this.addShim(name);
+    console.log(`Downloaded plugin ${name}`);
   }
 
   private async applyPlugin(name: string) {
@@ -109,7 +123,11 @@ export class PluginService {
   }
 
   private async getPluginPath(name: string) {
-    return await this.fsService.getOrCreateDir(path.resolve(await this.getPluginsPath(), name));
+    return await this.fsService.getOrCreateDir(await this.resolvePluginPath(name));;
+  }
+
+  private async resolvePluginPath(name: string) {
+    return path.resolve(await this.getPluginsPath(), name)
   }
 
 }

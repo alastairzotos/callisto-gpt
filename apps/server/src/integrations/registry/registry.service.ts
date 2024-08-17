@@ -12,13 +12,11 @@ export class RegistryService {
 
   async fetchPlugin(name: string, dest: string) {
     return new Promise<void>(async (resolve) => {
-      console.log(`Downloading plugin ${name}...`);
+      
       const pluginPath = path.resolve(this.envService.get().pluginsUrl, name);
       const distPath = path.resolve(pluginPath, 'dist');
 
       await this.fsService.copyDir(distPath, dest);
-
-      console.log(`Downloaded plugin ${name}`);
       resolve();
     })
   }
