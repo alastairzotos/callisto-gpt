@@ -20,8 +20,6 @@ const ResponseToken: React.FC<{ text: string }> = ({ text }) => {
 export const Results: React.FC = () => {
   const { response, pending } = useCallisto();
 
-  console.log(response)
-
   return (
     <div className="max-w-[450px] flex flex-col items-center">
       <Spinner
