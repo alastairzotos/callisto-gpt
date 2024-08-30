@@ -1,9 +1,26 @@
 import { useCallisto } from "@/hooks/use-callisto";
+import { useFadeIn } from "@/hooks/use-fade-in";
 import React from "react";
 import Spinner from 'react-spinners/CircleLoader';
 
+const ResponseToken: React.FC<{ text: string }> = ({ text }) => {
+  const fadeIn = useFadeIn();
+
+  if (text === '\n') {
+    return <br style={fadeIn} />;
+  }
+
+  return (
+    <span style={fadeIn}>
+      {text}
+    </span>
+  );
+}
+
 export const Results: React.FC = () => {
-  const { responseText, pending } = useCallisto();
+  const { response, pending } = useCallisto();
+
+  console.log(response)
 
   return (
     <div className="max-w-[450px] flex flex-col items-center">
@@ -13,20 +30,13 @@ export const Results: React.FC = () => {
         color="#16b897"
       />
 
-      <span>
+      <p>
         {
-          responseText
-            .split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0)
-            .map((line, idx) => (
-              <React.Fragment key={idx}>
-                {line}
-                <br />
-              </React.Fragment>
-            ))
+          response.map((text, idx) => (
+            <ResponseToken key={idx} text={text} />
+          ))
         }
-      </span>
+      </p>
     </div>
   )
 }

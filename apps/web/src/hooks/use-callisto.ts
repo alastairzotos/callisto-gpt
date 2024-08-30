@@ -9,7 +9,7 @@ interface CallistoValues {
   threadId?: string;
   pending: boolean;
   responding: boolean;
-  responseText: string;
+  response: string[];
 }
 
 interface CallistoActions {
@@ -23,7 +23,7 @@ const createCallistoState = (initialValues: CallistoValues) =>
     ...initialValues,
 
     chat: (query) => {
-      set({ pending: true, responding: false, responseText: '' });
+      set({ pending: true, responding: false, response: [] });
 
       const url = `http://localhost:7000/api/v1/chat?q=${encodeURIComponent(query)}${self().threadId ? `&tid=${self().threadId}` : ''}`;
       const ev = new EventSource(url);
@@ -40,7 +40,7 @@ const createCallistoState = (initialValues: CallistoValues) =>
             set({
               responding: true,
               pending: false,
-              responseText: self().responseText + res.data,
+              response: [...self().response, res.data],
             });
             
             break;
@@ -50,13 +50,13 @@ const createCallistoState = (initialValues: CallistoValues) =>
             break;
 
           case 'step-completed':
-            set({ responseText: self().responseText + '\n' });
+            set({ response: [...self().response, '\n'] });
             break;
 
           case 'stop':
             set({ responding: false });
             
-            useSpeech.getState().speak(self().responseText);
+            useSpeech.getState().speak(self().response.join(''));
 
             ev.close();
 
@@ -69,5 +69,5 @@ const createCallistoState = (initialValues: CallistoValues) =>
 export const useCallisto = createCallistoState({
   pending: false,
   responding: false,
-  responseText: '',
+  response: [],
 });
