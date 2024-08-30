@@ -15,7 +15,7 @@ export class OpenAIService {
       apiKey: this.envService.get().openAiApiKey
     })
   }
-  
+
   async updateAssistant(
     instructions: string,
     tools: OpenAI.Beta.Assistants.AssistantTool[],
@@ -70,5 +70,18 @@ export class OpenAIService {
       runId,
       { tool_outputs: toolOutputs },
     );
+  }
+
+  async createSpeech(input: string) {
+    const mp3 = await this.openai.audio.speech.create({
+      input,
+      voice: 'nova',
+      model: 'tts-1',
+      response_format: 'mp3',
+    });
+
+    // const buffer = Buffer.from(await mp3.arrayBuffer());
+
+    return await mp3.arrayBuffer();
   }
 }

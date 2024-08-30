@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { Response } from '@bitmetro/callisto';
-import { useSpeech } from './use-speech';
 
 const SELECTED_SERVER_KEY = 'callisto:selected-server';
 const SERVERS_KEY = 'callisto:known-servers';
@@ -12,6 +11,8 @@ interface CallistoValues {
 
   threadId?: string;
   isPending: boolean;
+
+  ttsPending: boolean;
 }
 
 interface CallistoActions {
@@ -20,6 +21,7 @@ interface CallistoActions {
   setResponseText: (text: string) => void;
 
   chat: (query: string) => void;
+  speak: (input: string) => void;
 }
 
 type CallistoState = CallistoValues & CallistoActions;
@@ -60,12 +62,35 @@ const createCallistoState = (initialValues: CallistoValues) =>
 
           case 'stop':
             set({ isPending: false });
-            useSpeech.getState().output?.speakResponse(self().responseText);
+            
+            self().speak(self().responseText);
+
             ev.close();
 
             break;
         }
       }
+    },
+
+    speak: (input) => {
+      set({ ttsPending: true });
+
+      const audioCtx = new AudioContext();
+
+      fetch(`http://localhost:7000/api/v1/chat/speech?input=${input}`)
+        .then(res => res.arrayBuffer())
+        .then(buffer => audioCtx.decodeAudioData(buffer))
+        .then(decodedAudio => {
+          const playSound = audioCtx.createBufferSource();
+          playSound.buffer = decodedAudio;
+
+          playSound.onended = () => {
+            set({ ttsPending: false });
+          }
+
+          playSound.connect(audioCtx.destination);
+          playSound.start(audioCtx.currentTime);
+        });
     }
   }))
 
@@ -75,4 +100,5 @@ export const useCallisto = createCallistoState({
   responseText: '',
 
   isPending: false,
+  ttsPending: false,
 });

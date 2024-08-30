@@ -62,6 +62,10 @@ export class ChatService {
     return responder.asObservable();
   }
 
+  async createSpeech(input: string) {
+    return await this.openAi.createSpeech(input);
+  }
+
   private async processEvent(event: OpenAI.Beta.Assistants.AssistantStreamEvent, responder: ChatResponder) {
     try {
       switch (event.event) {
