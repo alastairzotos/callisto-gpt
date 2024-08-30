@@ -10,7 +10,7 @@
   z-index: 0;
   border-radius: 1000px;
   
-  color: rgba(0, 0, 0, 0.87);
+  /* color: rgba(0, 0, 0, 0.87); */
   text-transform: uppercase;
   word-wrap: break-word;
   white-space: normal;
@@ -67,8 +67,8 @@
   left: 0;
   top: 0;
   border-radius: 1000px;
-  /* background-color: #fff; */
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: #000;
+  /* background-color: rgba(255, 255, 255, 0.95); */
   transition: opacity 0.2s linear, background-color 0.3s linear;
 }
 
