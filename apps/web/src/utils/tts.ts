@@ -10,9 +10,7 @@ export class SpeechOutputAdapter {
   private mainVoice?: SpeechSynthesisVoice;
 
   constructor() {
-    speechSynthesis.onvoiceschanged = () => {
-      this.mainVoice = speechSynthesis.getVoices().find(voice => voice.name === 'Samantha');
-    }
+    this.setVoice();
   }
 
   async speakResponse(text: string): Promise<void> {
@@ -33,6 +31,12 @@ export class SpeechOutputAdapter {
       }),
 
       cancel: () => speechSynthesis.cancel()
+    }
+  }
+
+  private setVoice() {
+    speechSynthesis.onvoiceschanged = () => {
+      this.mainVoice = speechSynthesis.getVoices().find(voice => voice.name === 'Samantha');
     }
   }
 }
