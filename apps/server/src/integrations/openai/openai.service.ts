@@ -15,7 +15,7 @@ export class OpenAIService {
       apiKey: this.envService.get().openAiApiKey
     })
   }
-
+  
   async updateAssistant(
     instructions: string,
     tools: OpenAI.Beta.Assistants.AssistantTool[],

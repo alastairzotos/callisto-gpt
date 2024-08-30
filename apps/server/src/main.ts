@@ -14,7 +14,8 @@ async function bootstrap() {
 
   await app.get(PluginService).startPlugins();
 
-  await app.listen(6000);
+  await app.listen(7000);
 }
 
 bootstrap();
+ 

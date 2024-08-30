@@ -30,7 +30,7 @@ async function run() {
   const callistoPrompt = chalk.blueBright(`[${chalk.blue('Callisto')}] `);
   
   const handleQuery = (query: string) => new Promise<void>(resolve => {
-    const url = `http://localhost:6000/api/v1/chat?q=${encodeURIComponent(query)}${threadId ? `&tid=${threadId}` : ''}`;
+    const url = `http://localhost:7000/api/v1/chat?q=${encodeURIComponent(query)}${threadId ? `&tid=${threadId}` : ''}`;
     const ev = new EventSource(url);
     
     const spinner = ora({
@@ -65,6 +65,7 @@ async function run() {
 
         case 'stop':
           process.stdout.write('\n');
+          ev.close();
           resolve();
           break;
       }

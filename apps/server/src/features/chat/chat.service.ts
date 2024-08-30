@@ -13,12 +13,13 @@ export class ChatService {
 
   constructor(
     private readonly openAi: OpenAIService,
-  ) {
-    this.openAi.updateAssistant(DEFAULT_PROMPT, []);
-  }
+  ) {}
 
   async applyFunctions(functions: PluginFunctionsWithHandlers) {
-    this.functions = functions;
+    this.functions = {
+      ...this.functions,
+      ...functions
+    };
 
     const tools = Object.entries(functions).map(([name, func]) => mapPluginFunctionToOpenAIFunction(name, func));
     const instructions = `${DEFAULT_PROMPT}\n\n${mapPluginFunctionsToPrompts(functions)}\n`;
@@ -27,6 +28,8 @@ export class ChatService {
   }
 
   async chat(query: string, threadId?: string) {
+    console.log(`Received query ${threadId ? `for thread ${threadId}` : 'for new thread'}: ${query}`);
+
     const thread = threadId
       ? await this.openAi.getThread(threadId)
       : await this.openAi.createThread();
