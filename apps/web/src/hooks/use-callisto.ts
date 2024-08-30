@@ -8,6 +8,7 @@ const SERVERS_KEY = 'callisto:known-servers';
 interface CallistoValues {
   threadId?: string;
   pending: boolean;
+  responding: boolean;
   responseText: string;
 }
 
@@ -22,7 +23,7 @@ const createCallistoState = (initialValues: CallistoValues) =>
     ...initialValues,
 
     chat: (query) => {
-      set({ pending: true, responseText: '' });
+      set({ pending: true, responding: false, responseText: '' });
 
       const url = `http://localhost:7000/api/v1/chat?q=${encodeURIComponent(query)}${self().threadId ? `&tid=${self().threadId}` : ''}`;
       const ev = new EventSource(url);
@@ -36,7 +37,12 @@ const createCallistoState = (initialValues: CallistoValues) =>
             break;
 
           case 'text':
-            set({ responseText: self().responseText + res.data });
+            set({
+              responding: true,
+              pending: false,
+              responseText: self().responseText + res.data,
+            });
+            
             break;
 
           case 'data':
@@ -48,7 +54,7 @@ const createCallistoState = (initialValues: CallistoValues) =>
             break;
 
           case 'stop':
-            set({ pending: false });
+            set({ responding: false });
             
             useSpeech.getState().speak(self().responseText);
 
@@ -62,5 +68,6 @@ const createCallistoState = (initialValues: CallistoValues) =>
 
 export const useCallisto = createCallistoState({
   pending: false,
+  responding: false,
   responseText: '',
 });

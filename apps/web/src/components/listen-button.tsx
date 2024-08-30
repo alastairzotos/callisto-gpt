@@ -18,6 +18,7 @@ export const ListenButton: React.FC = () => {
 
   const {
     pending,
+    responding,
   } = useCallisto();
 
   const handleClick = () => {
@@ -29,9 +30,9 @@ export const ListenButton: React.FC = () => {
   }
 
   return (
-    <ShinyButton onClick={handleClick} disabled={listening || pending}>
+    <ShinyButton onClick={handleClick} disabled={listening || pending || responding}>
       {
-        !listening && !pending
+        !listening && !pending && !responding
           ? "Talk"
           : firstUppercase(speechResultText || interimText)
       }
