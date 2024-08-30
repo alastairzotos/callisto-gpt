@@ -9,29 +9,29 @@ const firstUppercase = (text: string) =>
 export const ListenButton: React.FC = () => {
   const {
     listening,
+    interimText,
+    speechResultText,
     speaking,
-    input,
+    listen,
     cancelSpeech,
   } = useSpeech();
 
   const {
-    interimText,
-    speechResultText,
-    isPending,
+    pending,
   } = useCallisto();
 
   const handleClick = () => {
     if (speaking) {
       cancelSpeech();
-    } else {
-      input?.startRecognition();
     }
+    
+    listen();
   }
 
   return (
-    <ShinyButton onClick={handleClick} disabled={listening || isPending}>
+    <ShinyButton onClick={handleClick} disabled={listening || pending}>
       {
-        !listening && !isPending
+        !listening && !pending
           ? "Talk"
           : firstUppercase(speechResultText || interimText)
       }

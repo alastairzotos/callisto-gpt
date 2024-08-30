@@ -6,19 +6,12 @@ const SELECTED_SERVER_KEY = 'callisto:selected-server';
 const SERVERS_KEY = 'callisto:known-servers';
 
 interface CallistoValues {
-  interimText: string;
-  speechResultText: string;
-  responseText: string;
-
   threadId?: string;
-  isPending: boolean;
+  pending: boolean;
+  responseText: string;
 }
 
 interface CallistoActions {
-  setInterimText: (text: string) => void;
-  setSpeechResultText: (text: string) => void;
-  setResponseText: (text: string) => void;
-
   chat: (query: string) => void;
 }
 
@@ -28,12 +21,8 @@ const createCallistoState = (initialValues: CallistoValues) =>
   create<CallistoState>((set, self) => ({
     ...initialValues,
 
-    setInterimText: text => set({ interimText: text }),
-    setSpeechResultText: text => set({ speechResultText: text }),
-    setResponseText: text => set({ responseText: text }),
-
     chat: (query) => {
-      set({ isPending: true, responseText: '' });
+      set({ pending: true, responseText: '' });
 
       const url = `http://localhost:7000/api/v1/chat?q=${encodeURIComponent(query)}${self().threadId ? `&tid=${self().threadId}` : ''}`;
       const ev = new EventSource(url);
@@ -59,7 +48,7 @@ const createCallistoState = (initialValues: CallistoValues) =>
             break;
 
           case 'stop':
-            set({ isPending: false });
+            set({ pending: false });
             
             useSpeech.getState().speak(self().responseText);
 
@@ -72,9 +61,6 @@ const createCallistoState = (initialValues: CallistoValues) =>
   }))
 
 export const useCallisto = createCallistoState({
-  interimText: '',
-  speechResultText: '',
+  pending: false,
   responseText: '',
-
-  isPending: false,
 });
