@@ -51,6 +51,18 @@ const createCallistoState = (initialValues: CallistoValues) =>
       const url = `${self().currentServer}/api/v1/chat?q=${encodeURIComponent(query)}${self().threadId ? `&tid=${self().threadId}` : ''}`;
       const ev = new EventSource(url);
 
+      const finish = () => {
+        set({ responding: false, pending: false });
+        useSpeech.getState().speak(self().response.join(''));
+        ev.close();
+      }
+
+      ev.onerror = () => {
+        set({ response: ['There was an error processing your query. Are you sure you are connected to a valid Callisto server?'] });
+
+        finish();
+      };
+
       ev.onmessage = (evt) => {
         const res = JSON.parse(evt.data) as Response;
 
@@ -77,12 +89,7 @@ const createCallistoState = (initialValues: CallistoValues) =>
             break;
 
           case 'stop':
-            set({ responding: false });
-            
-            useSpeech.getState().speak(self().response.join(''));
-
-            ev.close();
-
+            finish();
             break;
         }
       }

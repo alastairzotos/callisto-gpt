@@ -67,7 +67,8 @@ const createSpeechState = (initialValues: SpeechValues) =>
 
           audioBufferSourceNode.connect(audioCtx.destination);
           audioBufferSourceNode.start(audioCtx.currentTime);
-        });
+        })
+        .catch(console.error);
     },
 
     cancelSpeech: () => {
