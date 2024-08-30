@@ -29,10 +29,10 @@ export const ListenButton: React.FC = () => {
   }
 
   return (
-    <ShinyButton onClick={handleClick}>
+    <ShinyButton onClick={handleClick} disabled={listening || isPending}>
       {
         !listening && !isPending
-          ? "Ask me something"
+          ? "Talk"
           : firstUppercase(speechResultText || interimText)
       }
     </ShinyButton>
