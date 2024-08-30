@@ -73,6 +73,7 @@ export class PluginService {
 
     const pluginPath = await this.getPluginPath(name);
 
+    console.log(`> Reading plugin manifest for plugin '${name}'`);
     const yamlPath = path.resolve(pluginPath, 'plugin.yaml');
 
     const yamlContent = await this.fsService.readFile(yamlPath);
@@ -83,9 +84,20 @@ export class PluginService {
     const functionsWithHandlers: PluginFunctionsWithHandlers = {};
 
     for (const [funcName, func] of functions) {
+      const onError = async () => {
+        console.log(`Shutdown detected for plugin '${name}, restarting...'`);
+
+        functionsWithHandlers[funcName] = {
+          ...func,
+          handler: await this.buildHandler(name, pluginPath, funcName, onError),
+        };
+
+        await this.chatService.applyFunctions(functionsWithHandlers);
+      }
+
       functionsWithHandlers[funcName] = {
         ...func,
-        handler: await this.buildHandler(name, pluginPath, funcName),
+        handler: await this.buildHandler(name, pluginPath, funcName, onError),
       };
     }
 
@@ -94,7 +106,7 @@ export class PluginService {
     console.log(`Applied plugin ${name}`);
   }
 
-  private async buildHandler(pluginName: string, pluginPath: string, funcName: string, ): Promise<PluginHandler> {
+  private async buildHandler(pluginName: string, pluginPath: string, funcName: string, onError: () => Promise<void>): Promise<PluginHandler> {
     const config = await this.pluginConfigService.loadPluginConfig(pluginName);
 
     const worker = cproc.fork(path.resolve(pluginPath, 'shim.js'), [], { silent: true, env: config });
@@ -103,12 +115,19 @@ export class PluginService {
     worker.stdout?.pipe(process.stdout);
     worker.stderr?.pipe(process.stderr);
 
-    return async (args) => {
+    const handler: PluginHandler = async (args) => {
       return new Promise<string>((resolve) => {
         worker.on('message', resolve);
         worker.send({ funcName, args });
       })
     }
+
+    worker.on('exit', onError);
+    worker.on('error', onError);
+
+    console.log(`> Created worker process ${worker.pid} for plugin '${pluginName}'`);
+
+    return handler;
   }
 
   private async addShim(pluginName: string) {
