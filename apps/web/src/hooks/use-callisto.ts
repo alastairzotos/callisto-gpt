@@ -54,6 +54,10 @@ const createCallistoState = (initialValues: CallistoValues) =>
             console.log(res.data);
             break;
 
+          case 'step-completed':
+            set({ responseText: self().responseText + '\n' });
+            break;
+
           case 'stop':
             set({ isPending: false });
             useSpeech.getState().output?.speakResponse(self().responseText);

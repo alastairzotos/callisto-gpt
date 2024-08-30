@@ -12,6 +12,10 @@ export class ChatResponder {
     this.subject.next({ event: 'message', data: { type: 'text', data: text } });
   }
 
+  sendStepCompleted() {
+    this.subject.next({ event: 'message', data: { type: 'step-completed' } });
+  }
+
   sendThreadId(threadId: string) {
     this.subject.next({ event: 'message', data: { type: 'thread-id', data: threadId } });
   }

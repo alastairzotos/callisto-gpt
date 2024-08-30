@@ -63,6 +63,10 @@ async function run() {
           console.log(res.data);
           break;
 
+        case 'step-completed':
+          process.stdout.write('\n');
+          break;
+
         case 'stop':
           process.stdout.write('\n');
           ev.close();

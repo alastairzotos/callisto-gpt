@@ -6,7 +6,18 @@ export const Results: React.FC = () => {
 
   return (
     <div className="max-w-[450px]">
-      <span>{responseText}</span>
+      <span>
+        {
+          responseText
+            .split('\n')
+            .map((line, idx) => (
+              <React.Fragment key={idx}>
+                {line}
+                <br />
+              </React.Fragment>
+            ))
+        }
+      </span>
     </div>
   )
 }

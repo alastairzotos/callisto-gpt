@@ -75,6 +75,10 @@ export class ChatService {
         case 'thread.run.requires_action':
           await this.handleRequiresAction(event.data, responder);
           break;
+
+        case 'thread.run.step.completed':
+          responder.sendStepCompleted();
+          break;
       }
     } catch (error) {
       this.logger.error("Error handling event:", error);

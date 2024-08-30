@@ -13,11 +13,15 @@ export interface DataResponse {
   data: any;
 }
 
+export interface StepCompletedResponse {
+  type: "step-completed";
+}
+
 export interface StopResponse {
   type: "stop";
 }
 
-export type ContentResponse = TextResponse | DataResponse;
+export type ContentResponse = TextResponse | DataResponse | StepCompletedResponse;
 
 export type Response = ThreadIdResponse | ContentResponse | StopResponse;
 
