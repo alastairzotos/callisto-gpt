@@ -47,7 +47,6 @@ const createCallistoState = (initialValues: CallistoValues) =>
             break;
 
           case 'text':
-            console.log(res.data);
             set({ responseText: self().responseText + res.data });
             break;
 
@@ -59,7 +58,7 @@ const createCallistoState = (initialValues: CallistoValues) =>
             set({ isPending: false });
             useSpeech.getState().output?.speakResponse(self().responseText);
             ev.close();
-            
+
             break;
         }
       }

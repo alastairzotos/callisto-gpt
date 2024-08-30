@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from "@nestjs/common";
+import { forwardRef, Inject, Injectable, Logger } from "@nestjs/common";
 import { parse } from 'yaml';
 import { Plugin, PluginFunctionsWithHandlers, PluginHandler } from "@bitmetro/callisto";
 import { ChatService } from "features/chat/chat.service";
@@ -8,9 +8,12 @@ import { PluginRepository } from "features/plugin/plugin.repository";
 import { PluginConfigService } from "features/plugin-config/plugin-config.service";
 import * as path from 'path';
 import * as cproc from 'child_process';
+import { CallistoLogger } from "utils/logger";
 
 @Injectable()
 export class PluginService {
+  private readonly logger = new CallistoLogger(PluginService.name);
+
   private workers: Record<string, cproc.ChildProcess> = {};
 
   constructor(
@@ -62,18 +65,18 @@ export class PluginService {
   }
 
   private async downloadPlugin(name: string) {
-    console.log(`Downloading plugin ${name}...`);
+    this.logger.log(`Downloading plugin ${name}...`);
     await this.registryService.fetchPlugin(name, await this.getPluginPath(name));
     await this.addShim(name);
-    console.log(`Downloaded plugin ${name}`);
+    this.logger.log(`Downloaded plugin ${name}`);
   }
 
   private async applyPlugin(name: string) {
-    console.log(`Applying plugin ${name}...`);
+    this.logger.log(`Applying plugin ${name}...`);
 
     const pluginPath = await this.getPluginPath(name);
 
-    console.log(`> Reading plugin manifest for plugin '${name}'`);
+    this.logger.log(`> Reading plugin manifest for plugin '${name}'`);
     const yamlPath = path.resolve(pluginPath, 'plugin.yaml');
 
     const yamlContent = await this.fsService.readFile(yamlPath);
@@ -85,7 +88,7 @@ export class PluginService {
 
     for (const [funcName, func] of functions) {
       const onError = async () => {
-        console.log(`Shutdown detected for plugin '${name}, restarting...'`);
+        this.logger.log(`Shutdown detected for plugin '${name}, restarting...'`);
 
         functionsWithHandlers[funcName] = {
           ...func,
@@ -103,7 +106,7 @@ export class PluginService {
 
     await this.chatService.applyFunctions(functionsWithHandlers);
 
-    console.log(`Applied plugin ${name}`);
+    this.logger.log(`Applied plugin ${name}`);
   }
 
   private async buildHandler(pluginName: string, pluginPath: string, funcName: string, onError: () => Promise<void>): Promise<PluginHandler> {
@@ -125,7 +128,7 @@ export class PluginService {
     worker.on('exit', onError);
     worker.on('error', onError);
 
-    console.log(`> Created worker process ${worker.pid} for plugin '${pluginName}'`);
+    this.logger.log(`> Created worker process ${worker.pid} for plugin '${pluginName}'`);
 
     return handler;
   }

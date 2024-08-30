@@ -35,7 +35,7 @@ export const ListenButton: React.FC = () => {
       {
         !listening && !isPending
           ? "Ask me something"
-          : firstUppercase(speechResultText || interimText || '.')
+          : firstUppercase(speechResultText || interimText)
       }
     </ShinyButton>
   )

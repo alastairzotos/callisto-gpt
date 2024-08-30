@@ -7,6 +7,13 @@ export interface SpeechResult {
 
 export class SpeechOutputAdapter {
   public onSpeaking = new CEventEmitter<(response?: SpeechResult) => void>();
+  private mainVoice?: SpeechSynthesisVoice;
+
+  constructor() {
+    speechSynthesis.onvoiceschanged = () => {
+      this.mainVoice = speechSynthesis.getVoices().find(voice => voice.name === 'Samantha');
+    }
+  }
 
   async speakResponse(text: string): Promise<void> {
     const result = this.speak(text);
@@ -16,9 +23,8 @@ export class SpeechOutputAdapter {
   }
 
   private speak(words: string): SpeechResult {
-    const mainVoice = speechSynthesis.getVoices().find(voice => voice.name === 'Samantha');
     const utterance = new SpeechSynthesisUtterance(words);
-    utterance.voice = mainVoice!;
+    utterance.voice = this.mainVoice!;
 
     return {
       promise: new Promise((resolve) => {

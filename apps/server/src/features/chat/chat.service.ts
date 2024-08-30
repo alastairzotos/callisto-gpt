@@ -2,6 +2,7 @@ import { PluginFunctionsWithHandlers } from "@bitmetro/callisto";
 import { Injectable } from "@nestjs/common";
 import { OpenAIService } from "integrations/openai/openai.service";
 import OpenAI from "openai";
+import { CallistoLogger } from "utils/logger";
 import { mapPluginFunctionToOpenAIFunction, mapPluginFunctionsToPrompts } from "utils/plugin";
 import { ChatResponder } from "utils/responder";
 
@@ -9,6 +10,8 @@ const DEFAULT_PROMPT = "You are a helpful assistant. Help the user with their qu
 
 @Injectable()
 export class ChatService {
+  private readonly logger = new CallistoLogger(ChatService.name);
+  
   private functions: PluginFunctionsWithHandlers = {};
 
   constructor(
@@ -28,7 +31,7 @@ export class ChatService {
   }
 
   async chat(query: string, threadId?: string) {
-    console.log(`Received query ${threadId ? `for thread ${threadId}` : 'for new thread'}: ${query}`);
+    this.logger.log(`Received query ${threadId ? `for thread ${threadId}` : 'for new thread'}: ${query}`);
 
     const thread = threadId
       ? await this.openAi.getThread(threadId)
@@ -74,7 +77,7 @@ export class ChatService {
           break;
       }
     } catch (error) {
-      console.error("Error handling event:", error);
+      this.logger.error("Error handling event:", error);
     }
   }
 
@@ -94,7 +97,7 @@ export class ChatService {
         this.processEvent(event, responder);
       }
     } catch (error) {
-      console.error("Error processing required action:", error);
+      this.logger.error("Error processing required action:", error);
     }
   }
 
