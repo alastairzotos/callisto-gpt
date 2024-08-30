@@ -13,10 +13,11 @@ const Layout: React.FC<React.PropsWithChildren> = ({ children }) => {
           <title>Callisto | BitMetro</title>
           <meta name="description" content="Pluginable virtual assistant" />
           <link rel="icon" href="/favicon.ico" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         </Head>
 
         <div className="max-w-[400px] flex flex-col items-center justify-between">
-        {children}
+          {children}
         </div>
       </main>
     </NextUIProvider>
