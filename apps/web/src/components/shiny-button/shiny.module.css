@@ -34,12 +34,12 @@
 }
 
 .shiny:disabled:before {
-  background: none;
+  background: rgba(200, 220, 230, 0.87);
 }
-/* 
-.shiny:hover {
-  box-shadow: 0px 0px 20px #fff;
-} */
+
+.shiny:disabled {
+  color: rgba(200, 220, 230, 0.87);
+}
 
 .shiny:hover:after {
   opacity: 0.8;
@@ -73,7 +73,7 @@
 }
 
 .shiny:disabled:after {
-  background-color: rgba(200, 220, 230, 0.87);
+  /* background-color: rgba(200, 220, 230, 0.87); */
   box-shadow: none;
 }
 
