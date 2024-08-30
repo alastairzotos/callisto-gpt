@@ -1,4 +1,4 @@
-import { Button, Input, Modal, ModalBody, ModalHeader, Popover, PopoverContent, PopoverTrigger, useDisclosure } from "@nextui-org/react";
+import { Button, Input, Popover, PopoverContent, PopoverTrigger, useDisclosure } from "@nextui-org/react";
 import { EditIcon, TickIcon } from "../icons";
 import { useState } from "react";
 
@@ -42,20 +42,20 @@ export const ServerItem: React.FC<Props> = ({ url, onChange }) => {
 
         <PopoverContent>
           <div className="flex gap-3">
-          <Input
-            value={currentUrl}
-            onChange={e => setCurrentUrl(e.target.value)}
-            onKeyUp={handleKeyUp}
-          />
+            <Input
+              value={currentUrl}
+              onChange={e => setCurrentUrl(e.target.value)}
+              onKeyUp={handleKeyUp}
+            />
 
-          <Button
-            isIconOnly
-            variant="solid"
-            color="primary"
-            onClick={handleUpdateUrl}
-          >
-            <TickIcon />
-          </Button>
+            <Button
+              isIconOnly
+              variant="solid"
+              color="primary"
+              onClick={handleUpdateUrl}
+            >
+              <TickIcon />
+            </Button>
           </div>
         </PopoverContent>
       </Popover>

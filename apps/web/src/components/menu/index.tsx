@@ -1,4 +1,4 @@
-import { EditIcon, IconMenu } from "../icons"
+import { IconMenu } from "../icons"
 import {
   Accordion,
   AccordionItem,
@@ -15,6 +15,7 @@ import {
 
 import { useCallisto } from "@/hooks/use-callisto";
 import { ServerItem } from "./server-item";
+import { AddServer } from "./add-server";
 
 export const Menu: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -25,8 +26,6 @@ export const Menu: React.FC = () => {
     setCurrentServer,
     updateKnownServers,
   } = useCallisto();
-
-  console.log(currentServer);
 
   return (
     <>
@@ -57,13 +56,7 @@ export const Menu: React.FC = () => {
                       disallowEmptySelection
                       defaultSelectedKeys={[currentServer].filter(i => !!i) as string[]}
                       onSelectionChange={(e: any) => setCurrentServer(e.values().next().value)}
-                      bottomContent={(
-                        <div className="flex justify-end">
-                          <Button variant="flat" color="secondary">
-                            + Server
-                          </Button>
-                        </div>
-                      )}
+                      bottomContent={<AddServer />}
                     >
                       {knownServers.map((server, index) => (
                         <ListboxItem key={server}>
