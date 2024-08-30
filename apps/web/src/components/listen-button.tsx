@@ -19,22 +19,27 @@ export const ListenButton: React.FC = () => {
   const {
     pending,
     responding,
+    currentServer,
   } = useCallisto();
 
   const handleClick = () => {
     if (speaking) {
       cancelSpeech();
     }
-    
+
     listen();
   }
 
   return (
-    <ShinyButton onClick={handleClick} disabled={listening || pending || responding}>
+    <ShinyButton onClick={handleClick} disabled={listening || pending || responding || !currentServer}>
       {
-        !listening && !pending && !responding
-          ? "Talk"
-          : firstUppercase(speechResultText || interimText)
+        !currentServer
+          ? "No server selected"
+          : (
+            !listening && !pending && !responding
+              ? "Talk"
+              : firstUppercase(speechResultText || interimText)
+          )
       }
     </ShinyButton>
   )

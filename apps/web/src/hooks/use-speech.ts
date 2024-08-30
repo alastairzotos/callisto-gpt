@@ -52,7 +52,7 @@ const createSpeechState = (initialValues: SpeechValues) =>
 
       const audioCtx = new AudioContext();
 
-      fetch(`${useCallisto.getState().currentServerUrl()}/api/v1/chat/speech?input=${input}`)
+      fetch(`${useCallisto.getState().currentServer}/api/v1/chat/speech?input=${input}`)
         .then(res => res.arrayBuffer())
         .then(buffer => audioCtx.decodeAudioData(buffer))
         .then(decodedAudio => {

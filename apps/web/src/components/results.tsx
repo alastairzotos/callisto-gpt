@@ -21,7 +21,7 @@ export const Results: React.FC = () => {
   const { response, pending } = useCallisto();
 
   return (
-    <div className="max-w-[450px] flex flex-col items-center">
+    <div className="flex flex-col items-center">
       <Spinner
         loading={pending}
         size={50}

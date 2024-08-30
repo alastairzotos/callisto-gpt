@@ -1,5 +1,6 @@
 import { ListenButton } from "@/components/listen-button";
 import { Logo } from "@/components/logo";
+import { Menu } from "@/components/menu";
 import { Results } from "@/components/results";
 import { useCallisto } from "@/hooks/use-callisto";
 import { useSpeech } from "@/hooks/use-speech";
@@ -15,14 +16,15 @@ export default function Home() {
       configureSpeech();
     }
   }, [])
-  
+
   return (
-    <main className="flex flex-col items-center justify-between w-full h-screen p-10">
-      <Logo />
-
+    <>
+      <div className="w-[350px] flex flex-col items-center">
+        <Menu />
+        <Logo />
+      </div>
       <Results />
-
       <ListenButton />
-    </main>
+    </>
   );
 }

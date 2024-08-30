@@ -7,10 +7,8 @@ import { getLocalStorage, hasLocalStorage, setLocalStorage } from '@/utils/local
 const SELECTED_SERVER_KEY = '@bitmetro/callisto:selected-server';
 const SERVERS_KEY = '@bitmetro/callisto:known-servers';
 
-type ServerList = Record<string, string>;
-
 interface CallistoValues {
-  knownServers?: ServerList;
+  knownServers: string[];
   currentServer?: string;
 
   threadId?: string;
@@ -22,7 +20,8 @@ interface CallistoValues {
 interface CallistoActions {
   configure: () => void;
   chat: (query: string) => void;
-  currentServerUrl: () => string | undefined;
+  updateKnownServers: (servers: string[]) => void;
+  setCurrentServer: (server: string) => void;
 }
 
 type CallistoState = CallistoValues & CallistoActions;
@@ -32,26 +31,24 @@ const createCallistoState = (initialValues: CallistoValues) =>
     ...initialValues,
 
     configure: () => {
-      const encodedDefaultServers = JSON.stringify({
-        bitmetro: getEnv().defaultServerUrl,
-      });
+      const encodedDefaultServers = JSON.stringify([getEnv().defaultServerUrl]);
 
       if (!hasLocalStorage(SERVERS_KEY)) {
         setLocalStorage(SERVERS_KEY, encodedDefaultServers);
       }
 
-      const knownServers = JSON.parse(getLocalStorage(SERVERS_KEY)) as ServerList;
+      const knownServers = JSON.parse(getLocalStorage(SERVERS_KEY)) as string[];
 
       set({
         knownServers,
-        currentServer: getLocalStorage(SELECTED_SERVER_KEY, 'bitmetro'),
+        currentServer: getLocalStorage(SELECTED_SERVER_KEY, knownServers[0]),
       });
     },
 
     chat: (query) => {
       set({ pending: true, responding: false, response: [] });
 
-      const url = `${self().currentServerUrl()}/api/v1/chat?q=${encodeURIComponent(query)}${self().threadId ? `&tid=${self().threadId}` : ''}`;
+      const url = `${self().currentServer}/api/v1/chat?q=${encodeURIComponent(query)}${self().threadId ? `&tid=${self().threadId}` : ''}`;
       const ev = new EventSource(url);
 
       ev.onmessage = (evt) => {
@@ -91,10 +88,19 @@ const createCallistoState = (initialValues: CallistoValues) =>
       }
     },
 
-    currentServerUrl: () => self().knownServers?.[self().currentServer || ''],
+    setCurrentServer: (server) => {
+      set({ currentServer: server });
+      setLocalStorage(SELECTED_SERVER_KEY, server);
+    },
+
+    updateKnownServers: (servers: string[]) => {
+      set({ knownServers: servers });
+      setLocalStorage(SERVERS_KEY, JSON.stringify(servers));
+    },
   }))
 
 export const useCallisto = createCallistoState({
+  knownServers: [],
   pending: false,
   responding: false,
   response: [],
