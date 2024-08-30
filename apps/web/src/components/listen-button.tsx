@@ -9,7 +9,7 @@ const firstUppercase = (text: string) =>
 export const ListenButton: React.FC = () => {
   const {
     listening,
-    speechResult,
+    speaking,
     input,
     cancelSpeech,
   } = useSpeech();
@@ -19,8 +19,6 @@ export const ListenButton: React.FC = () => {
     speechResultText,
     isPending,
   } = useCallisto();
-
-  const speaking = !!speechResult;
 
   const handleClick = () => {
     if (speaking) {

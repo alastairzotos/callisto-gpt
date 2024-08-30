@@ -1,17 +1,18 @@
 import { create } from 'zustand';
 import { useCallisto } from './use-callisto';
 import { SpeechInputAdapter } from '@/utils/stt';
-import { SpeechOutputAdapter, SpeechResult } from '@/utils/tts';
 
 interface SpeechValues {
   input?: SpeechInputAdapter;
-  output?: SpeechOutputAdapter;
-  speechResult?: SpeechResult;
   listening: boolean;
+
+  speaking: boolean;
+  audioBufferSourceNode?: AudioBufferSourceNode;
 }
 
 interface SpeechActions {
   configure: () => void;
+  speak: (input: string) => void;
   cancelSpeech: () => void;
 }
 
@@ -22,7 +23,7 @@ const createSpeechState = (initialValues: SpeechValues) =>
     ...initialValues,
 
     configure: () => {
-      if (!self().input && !self().output) {
+      if (!self().input) {
         const input = new SpeechInputAdapter();
         input.onListening.attach(listening => set({ listening }));
         input.onResult.attach(async transcript => useCallisto.getState().chat(transcript));
@@ -37,21 +38,39 @@ const createSpeechState = (initialValues: SpeechValues) =>
           useCallisto.getState().setResponseText('')
         })
 
-        const output = new SpeechOutputAdapter();
-        output.onSpeaking.attach(speechResult => set({ speechResult }));
-
-        set({ input, output });
+        set({ input });
       }
     },
 
+    speak: (input) => {
+      set({ speaking: true });
+
+      const audioCtx = new AudioContext();
+
+      fetch(`http://localhost:7000/api/v1/chat/speech?input=${input}`)
+        .then(res => res.arrayBuffer())
+        .then(buffer => audioCtx.decodeAudioData(buffer))
+        .then(decodedAudio => {
+          const audioBufferSourceNode = audioCtx.createBufferSource();
+          audioBufferSourceNode.buffer = decodedAudio;
+
+          audioBufferSourceNode.onended = () => {
+            set({ speaking: false, audioBufferSourceNode: undefined });
+          }
+
+          set({ audioBufferSourceNode })
+
+          audioBufferSourceNode.connect(audioCtx.destination);
+          audioBufferSourceNode.start(audioCtx.currentTime);
+        });
+    },
+
     cancelSpeech: () => {
-      if (!!self().speechResult) {
-        self().speechResult?.cancel();
-        set({ speechResult: undefined });
-      }
+      self().audioBufferSourceNode?.stop();
     }
   }));
 
 export const useSpeech = createSpeechState({
-  listening: false
+  listening: false,
+  speaking: false,
 });
