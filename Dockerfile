@@ -6,11 +6,11 @@ ARG SCOPE
 ARG PORT
 
 COPY . .
-RUN yarn global add turbo@1.5.5 && \
+RUN yarn global add turbo@2.0.13 && \
     turbo prune --scope=${SCOPE} && \
     cd out && \
     yarn install && \
-    turbo run build --scope=${SCOPE} --include-dependencies && \
+    turbo run build --filter=${SCOPE} && \
     rm -rf node_modules/.cache .yarn/cache
 
 FROM node:20-alpine as app
