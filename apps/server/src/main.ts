@@ -24,6 +24,8 @@ async function bootstrap() {
 
   const url = await ngrok.connect(7000);
 
+  console.log(`URL: ${url}`);
+
   qrcode.generate(`${environment.clientUrl}?server=${url}`, { small: true });
 }
 
