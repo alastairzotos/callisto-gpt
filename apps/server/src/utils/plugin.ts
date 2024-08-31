@@ -2,8 +2,8 @@ import { PluginFunction, PluginFunctionParameter, PluginFunctions } from "@bitme
 import OpenAI from "openai";
 
 export const mapPluginFunctionsToPrompts = (plugins: PluginFunctions): string =>
-  `You are provided with the following functions:\n${Object.entries(plugins).map(([name, plugin]) => mapPluginFunctionToPrompt(name, plugin)).join('\n')
-  }`;
+  `You are provided with the following functions:\n${Object.entries(plugins).map(([name, plugin]) => mapPluginFunctionToPrompt(name, plugin)).join('\n')}
+  Only call those functions and no others`;
 
 export const mapPluginFunctionToOpenAIFunction = (name: string, plugin: PluginFunction): OpenAI.Beta.Assistants.AssistantTool => ({
   type: 'function',

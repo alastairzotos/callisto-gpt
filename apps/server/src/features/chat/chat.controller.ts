@@ -1,12 +1,14 @@
 import { Controller, Get, Query, Res, Sse } from "@nestjs/common";
 import { ChatService } from "./chat.service";
 import { Response } from "express";
+import { OpenAIService } from "integrations/openai/openai.service";
 
 @Controller('chat')
 export class ChatController {
   constructor(
     private readonly chatService: ChatService,
-  ) {}
+    private readonly openAiService: OpenAIService,
+  ) { }
 
   @Sse()
   async chat(
@@ -21,8 +23,10 @@ export class ChatController {
     @Query('input') input: string,
     @Res() res: Response,
   ) {
-    const buffer = await this.chatService.createSpeech(input);
+    if (input.trim().length > 0) {
+      const buffer = await this.openAiService.createSpeech(input.trim());
 
-    res.end(Buffer.from(buffer));
+      res.end(Buffer.from(buffer));
+    }
   }
 }

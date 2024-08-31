@@ -4,6 +4,7 @@ import { SpeechInputAdapter } from '@/utils/stt';
 
 interface SpeechValues {
   _input?: SpeechInputAdapter;
+  _queue: string[];
   listening: boolean;
   interimText: string;
   speechResultText: string;
@@ -17,6 +18,7 @@ interface SpeechActions {
   listen: () => void;
   speak: (input: string) => void;
   cancelSpeech: () => void;
+  _processQueue: () => void;
 }
 
 export type SpeechState = SpeechValues & SpeechActions;
@@ -48,27 +50,46 @@ const createSpeechState = (initialValues: SpeechValues) =>
     },
 
     speak: (input) => {
-      set({ speaking: true });
+      if (input.trim().length > 0) {
+        set({ _queue: [...self()._queue, input.trim()] });
+        self()._processQueue();
+      }
+    },
 
-      const audioCtx = new AudioContext();
+    _processQueue: () => {
+      if (self().speaking) {
+        return;
+      }
 
-      fetch(`${useCallisto.getState().currentServer}/api/v1/chat/speech?input=${input}`)
-        .then(res => res.arrayBuffer())
-        .then(buffer => audioCtx.decodeAudioData(buffer))
-        .then(decodedAudio => {
-          const audioBufferSourceNode = audioCtx.createBufferSource();
-          audioBufferSourceNode.buffer = decodedAudio;
+      if (self()._queue.length > 0) {
+        const input = self()._queue[0];
 
-          audioBufferSourceNode.onended = () => {
-            set({ speaking: false, _audioBufferSourceNode: undefined });
-          }
+        set({
+          _queue: self()._queue.slice(1),
+          speaking: true,
+        });
 
-          set({ _audioBufferSourceNode: audioBufferSourceNode })
+        const audioCtx = new AudioContext();
 
-          audioBufferSourceNode.connect(audioCtx.destination);
-          audioBufferSourceNode.start(audioCtx.currentTime);
-        })
-        .catch(console.error);
+        fetch(`${useCallisto.getState().currentServer}/api/v1/chat/speech?input=${input}`)
+          .then(res => res.arrayBuffer())
+          .then(buffer => audioCtx.decodeAudioData(buffer))
+          .then(decodedAudio => {
+            const audioBufferSourceNode = audioCtx.createBufferSource();
+            audioBufferSourceNode.buffer = decodedAudio;
+
+            audioBufferSourceNode.onended = () => {
+              set({ speaking: false, _audioBufferSourceNode: undefined });
+              self()._processQueue();
+            }
+
+            set({ _audioBufferSourceNode: audioBufferSourceNode })
+
+            audioBufferSourceNode.connect(audioCtx.destination);
+            audioBufferSourceNode.start(audioCtx.currentTime);
+          })
+          .catch(console.error);
+      }
     },
 
     cancelSpeech: () => {
@@ -77,6 +98,7 @@ const createSpeechState = (initialValues: SpeechValues) =>
   }));
 
 export const useSpeech = createSpeechState({
+  _queue: [],
   listening: false,
   interimText: '',
   speechResultText: '',

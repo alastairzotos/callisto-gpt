@@ -51,9 +51,10 @@ const createCallistoState = (initialValues: CallistoValues) =>
       const url = `${self().currentServer}/api/v1/chat?q=${encodeURIComponent(query)}${self().threadId ? `&tid=${self().threadId}` : ''}`;
       const ev = new EventSource(url);
 
+      let lastTokenIndex = 0;
+
       const finish = () => {
         set({ responding: false, pending: false });
-        useSpeech.getState().speak(self().response.join(''));
         ev.close();
       }
 
@@ -86,6 +87,11 @@ const createCallistoState = (initialValues: CallistoValues) =>
 
           case 'step-completed':
             set({ response: [...self().response, '\n'] });
+            useSpeech.getState().speak(
+              self().response.slice(lastTokenIndex).join('')
+            );
+
+            lastTokenIndex = self().response.length;
             break;
 
           case 'stop':

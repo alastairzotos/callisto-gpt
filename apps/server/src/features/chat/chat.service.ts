@@ -62,10 +62,6 @@ export class ChatService {
     return responder.asObservable();
   }
 
-  async createSpeech(input: string) {
-    return await this.openAi.createSpeech(input);
-  }
-
   private async processEvent(event: OpenAI.Beta.Assistants.AssistantStreamEvent, responder: ChatResponder) {
     try {
       switch (event.event) {
@@ -114,8 +110,14 @@ export class ChatService {
   ): Promise<OpenAI.Beta.Threads.Runs.RunSubmitToolOutputsParams.ToolOutput> {
     const args = JSON.parse(toolCall.function.arguments);
 
-    const output = await this.functions[toolCall.function.name].handler(args);
+    if (this.functions[toolCall.function.name]) {
+      const output = await this.functions[toolCall.function.name].handler(args);
+      return { tool_call_id: toolCall.id, output }
+    }
 
-    return { tool_call_id: toolCall.id, output }
+    return {
+      tool_call_id: toolCall.id,
+      output: `Unknown function "${toolCall.function.name}"`,
+    }
   }
 }
