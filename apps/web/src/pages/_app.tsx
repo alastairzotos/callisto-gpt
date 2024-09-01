@@ -16,7 +16,7 @@ const Layout: React.FC<React.PropsWithChildren> = ({ children }) => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         </Head>
 
-        <div className="max-w-[400px] flex flex-col items-center justify-between">
+        <div className="w-full max-w-[400px] flex flex-col items-center justify-between">
           {children}
         </div>
       </main>
