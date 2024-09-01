@@ -8,7 +8,7 @@ import { NextUIProvider } from "@nextui-org/react";
 const Layout: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <NextUIProvider>
-      <main className="dark text-foreground bg-background flex justify-center w-full h-svh p-10">
+      <main className="dark text-foreground bg-background flex justify-center w-full h-dvh p-10">
         <Head>
           <title>Callisto | BitMetro</title>
           <meta name="description" content="Pluginable virtual assistant" />
